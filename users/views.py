@@ -21,24 +21,28 @@ def generate_question(messages, job_description):
         f"CRITICAL RULES:\n"
         f"1. Ask a SPECIFIC technical question about {job_description}\n"
         f"2. DO NOT ask about 'experience' or 'tell me about'\n"
-        f"3. Ask about concepts, syntax, commands, best practices, or problem-solving\n"
-        f"4. Make it testable and specific\n"
+        f"3. Ask about concepts, tools, syntax, commands, best practices, or problem-solving\n"
+        f"4. Make it testable and specific to {job_description}\n"
         f"5. Output ONLY the question, no explanation\n\n"
-        f"GOOD Examples:\n"
-        f"- For SQL: 'What is the difference between INNER JOIN and LEFT JOIN? Provide an example.'\n"
-        f"- For SQL: 'How would you optimize a slow-running query with multiple joins?'\n"
-        f"- For Python: 'Explain list comprehension and write an example to filter even numbers.'\n"
-        f"- For Java: 'What is the difference between == and .equals() in Java?'\n\n"
-        f"BAD Examples (DO NOT USE):\n"
-        f"- 'Tell me about your experience with SQL'\n"
-        f"- 'Describe your background in...'\n\n"
-        f"Now generate a TECHNICAL question for: {job_description}"
+        f"GOOD Examples for different roles:\n"
+        f"- SQL: 'What is the difference between INNER JOIN and LEFT JOIN?'\n"
+        f"- Python Developer: 'Explain the difference between list and tuple in Python.'\n"
+        f"- Java Developer: 'What is the difference between == and .equals() in Java?'\n"
+        f"- React Developer: 'Explain the difference between state and props in React.'\n"
+        f"- Data Scientist: 'How do you handle missing values in a dataset?'\n"
+        f"- DevOps Engineer: 'What is the difference between Docker and Kubernetes?'\n"
+        f"- Frontend Developer: 'Explain CSS Flexbox and when to use it.'\n\n"
+        f"BAD Examples (NEVER USE):\n"
+        f"- 'Tell me about your experience'\n"
+        f"- 'Describe your background'\n"
+        f"- 'What is your experience with...'\n\n"
+        f"Now generate a TECHNICAL question specifically for: {job_description}"
     )
     
     try:
         model = genai.GenerativeModel(
             'gemini-1.5-flash-latest',
-            generation_config={'temperature': 0.7}
+            generation_config={'temperature': 0.8}
         )
         response = model.generate_content(prompt)
         question = response.text.strip()
@@ -46,12 +50,12 @@ def generate_question(messages, job_description):
         question = question.strip('"').strip("'").strip()
         
         # Validate question doesn't contain generic phrases
-        generic_phrases = ['experience', 'tell me about', 'describe your', 'background']
+        generic_phrases = ['experience', 'tell me about', 'describe your', 'background', 'your experience with']
         if any(phrase in question.lower() for phrase in generic_phrases):
             # Fallback to specific technical question
-            return f"What are the key concepts and best practices you should know for {job_description}?"
+            return f"What are the key technical concepts and best practices in {job_description}?"
         
-        return question if question else f"Explain a complex problem you solved using {job_description}."
+        return question if question else f"Explain a technical challenge you would solve using {job_description}."
     except Exception as e:
         print(f"ERROR: Question generation failed - {str(e)}")
         return f"What are the most important technical skills required for {job_description}?"
