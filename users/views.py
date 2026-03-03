@@ -13,19 +13,34 @@ import google.generativeai as genai
 genai.configure(api_key=settings.GOOGLE_API_KEY)
 
 def generate_question(messages, job_description):
+    # Count how many questions have been asked
+    question_count = len([m for m in messages if 'content' in m]) // 2 + 1
+    
     prompt = (
-        f"You are an AI interviewer for this role: {job_description}.\n"
-        f"Ask exactly ONE interview question related to this role.\n"
-        f"Rules: Only one question, No explanation, Max 2 lines"
+        f"You are conducting a technical interview for the position: {job_description}\n\n"
+        f"This is question {question_count} of 5.\n"
+        f"Generate ONE specific technical or behavioral interview question that directly tests skills, knowledge, or experience required for a {job_description}.\n\n"
+        f"Requirements:\n"
+        f"- Question must be highly relevant to {job_description}\n"
+        f"- Focus on technical skills, tools, frameworks, or methodologies used in this role\n"
+        f"- Make it specific and practical, not generic\n"
+        f"- Keep it concise (1-2 sentences)\n"
+        f"- Do NOT include any explanation or context, just the question\n\n"
+        f"Example for 'Python Developer': 'Explain the difference between list and tuple in Python and when you would use each.'\n"
+        f"Example for 'Data Scientist': 'How would you handle missing data in a dataset before building a machine learning model?'\n\n"
+        f"Now generate a question for: {job_description}"
     )
     
     try:
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         response = model.generate_content(prompt)
-        return response.text.strip() if response.text else "Tell me about your experience."
+        question = response.text.strip()
+        # Remove any quotes or extra formatting
+        question = question.strip('"').strip("'").strip()
+        return question if question else f"Describe your experience with {job_description}."
     except Exception as e:
         print(f"ERROR: Question generation failed - {str(e)}")
-        return "Tell me about your experience."
+        return f"Tell me about your experience as a {job_description}."
 
 def evaluate_answer(question, answer):
     prompt = (
