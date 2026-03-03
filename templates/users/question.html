@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Question</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+            background-attachment: fixed;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        button:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease-in-out;
+        }
+        textarea, input {
+            border: 2px solid #4F46E5 !important; /* Indigo border for input fields */
+            transition: border-color 0.3s ease-in-out;
+        }
+        textarea:focus, input:focus {
+            border-color: #7C3AED !important; /* Lighter purple on focus */
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        .container-bg {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .timer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4F46E5;
+        }
+        .timer.warning {
+            color: #F59E0B;
+        }
+        .timer.danger {
+            color: #EF4444;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container-bg rounded-2xl shadow-2xl p-8 max-w-2xl w-full fade-in">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">AI Interview Question</h2>
+        
+        <div class="text-center mb-6">
+            <div class="timer" id="timer">20:00</div>
+            <p class="text-sm text-gray-600">Total time remaining for interview</p>
+        </div>
+        
+        <p id="question-text" class="text-lg text-gray-700 bg-gray-50 p-4 rounded-lg mb-6">{{ question }}</p>
+
+        <div class="flex justify-center space-x-4 mb-6">
+            <button onclick="speakText()" class="bg-blue-500 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-blue-600 transition-colors">
+                <span>🔊</span><span>Read Question</span>
+            </button>
+            <button onclick="startListening()" class="bg-green-500 text-white px-6 py-3 rounded-lg flex items-center space-x-2 hover:bg-green-600 transition-colors">
+                <span>🎤</span><span>Start Speaking</span>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'answer_question' %}" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors">Submit Answer</button>
+        </form>
+
+        <p class="text-sm text-gray-500 italic text-center mt-4">Your voice input will appear in the text box</p>
+    </div>
+
+    <script>
+        // ---------- Anti-Cheating Security ----------
+        let tabSwitchCount = 0;
+        
+        // Detect tab/window switch
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                tabSwitchCount++;
+                sendViolation('tab_switch');
+            }
+        });
+        
+        // Disable right-click
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            sendViolation('right_click');
+        });
+        
+        // Disable copy
+        document.addEventListener('copy', function(e) {
+            e.preventDefault();
+            sendViolation('copy');
+        });
+        
+        // Disable paste
+        document.addEventListener('paste', function(e) {
+            e.preventDefault();
+            sendViolation('paste');
+        });
+        
+        // Disable keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+A, etc.)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'a' || e.key === 'x')) {
+                e.preventDefault();
+                sendViolation('copy');
+            }
+        });
+        
+        function sendViolation(type) {
+            fetch('/track-violation/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({type: type})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'disqualified') {
+                    alert('You have been disqualified for violating interview rules!');
+                    window.location.href = '/user-homepage/';
+                } else if (data.status === 'warning') {
+                    alert(`Warning! Tab switch detected (${data.count}/2). One more violation will disqualify you!`);
+                }
+            });
+        }
+
+        // ---------- Timer (20 minutes TOTAL for entire interview) ----------
+        let timeLeft = localStorage.getItem('interviewTimeLeft') ? parseInt(localStorage.getItem('interviewTimeLeft')) : 1200; // 20 minutes total
+        const timerElement = document.getElementById('timer');
+        
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            if (timeLeft <= 60) {
+                timerElement.classList.add('danger');
+            } else if (timeLeft <= 120) {
+                timerElement.classList.add('warning');
+            }
+            
+            if (timeLeft <= 0) {
+                alert('Time is up! Auto-submitting and showing results...');
+                localStorage.removeItem('interviewTimeLeft');
+                document.querySelector('form').submit();
+                return;
+            }
+            
+            timeLeft--;
+            localStorage.setItem('interviewTimeLeft', timeLeft);
+        }
+        
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // ---------- Text-to-Speech ----------
+        function speakText() {
+            const text = document.getElementById('question-text').innerText;
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+        }
+
+        // ---------- Speech-to-Text ----------
+        function startListening() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Your browser does not support speech recognition.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const spokenText = event.results[0][0].transcript;
+                const textarea = document.querySelector('textarea[name="answer"]');
+                if (textarea) {
+                    textarea.value = spokenText;
+                }
+            };
+
+            recognition.onerror = function(event) {
+                alert('Error occurred in recognition: ' + event.error);
+            };
+        }
+    </script>
+</body>
+</html>

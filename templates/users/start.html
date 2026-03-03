@@ -1,0 +1,97 @@
+{% extends "users/user_base.html" %}
+
+{% block content %}
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Instructions Section -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6 rounded-lg shadow-md">
+            <h3 class="text-2xl font-bold text-yellow-800 mb-4 flex items-center">
+                <span class="text-3xl mr-2">📋</span> Interview Instructions
+            </h3>
+            <div class="space-y-3 text-gray-700">
+                <div class="flex items-start">
+                    <span class="text-xl mr-2">⏱️</span>
+                    <p><strong>Time Limit:</strong> You have 20 minutes total for the entire interview.</p>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-xl mr-2">🚫</span>
+                    <p><strong>No Tab Switching:</strong> Do not switch tabs or windows. You'll get 1 warning, then disqualification.</p>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-xl mr-2">📝</span>
+                    <p><strong>No Copy/Paste:</strong> Copying questions or pasting answers will result in immediate disqualification.</p>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-xl mr-2">🎤</span>
+                    <p><strong>Voice Input Available:</strong> You can use the microphone button to speak your answers.</p>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-xl mr-2">✅</span>
+                    <p><strong>Be Honest:</strong> Answer questions based on your own knowledge and experience.</p>
+                </div>
+                <div class="flex items-start">
+                    <span class="text-xl mr-2">⚠️</span>
+                    <p><strong>Stay Focused:</strong> Keep this window active throughout the interview. Any violation will be tracked.</p>
+                </div>
+            </div>
+            <div class="mt-4 p-4 bg-red-100 border border-red-300 rounded">
+                <p class="text-red-800 font-semibold">⚠️ Warning: Violations will result in automatic disqualification and email notification.</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-100 p-8 rounded-lg shadow-lg animate-slide-in">
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <!-- Form Section -->
+                <div class="md:w-1/2">
+                    <h2 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 mb-6">Start Your Interview 🎤</h2>
+                    <p class="text-gray-600 mb-6">Fill in your details below. Once you click "Start Interview", the timer begins immediately.</p>
+                    
+                    {% if error_message %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        <strong>⚠️ Error:</strong> {{ error_message }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" onclick="localStorage.removeItem('interviewTimeLeft')" class="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition flex items-center justify-center">
+                            I Understand - Start Interview 🚀
+                        </button>
+                    </form>
+                </div>
+                <!-- Image Section -->
+                <div class="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Interview in progress" class="w-full h-auto rounded-lg shadow-md animate-float">
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* Custom styles for input field borders */
+        input, textarea, select {
+            border: 2px solid #4F46E5 !important; /* Indigo border for input fields */
+            transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color:rgb(6, 6, 6) !important; /* Lighter purple on focus */
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        /* Ensure animations are preserved */
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+    </style>
+{% endblock %}

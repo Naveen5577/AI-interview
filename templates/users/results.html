@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Result for {{ candidate.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
+            background-attachment: fixed;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .container-bg {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .response-card {
+            border: 2px solid #4F46E5; /* Indigo border for response cards */
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        .response-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        .status-passed {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+        }
+        .status-failed {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+        }
+        .back-button:hover {
+            transform: translateY(-2px);
+            background-color: #4F46E5;
+        }
+        .avatar {
+            background: linear-gradient(45deg, #4F46E5, #7C3AED);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="container-bg rounded-2xl shadow-2xl p-8 max-w-3xl w-full fade-in">
+        <div class="flex items-center space-x-4 mb-6">
+            <div class="w-16 h-16 rounded-full avatar">
+                {{ candidate.name|first }}
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800">Interview Result for {{ candidate.name }}</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <p class="text-lg text-gray-700">
+                <strong>Average Score:</strong> {{ avg_score|floatformat:2 }}
+            </p>
+            <p class="text-lg">
+                <strong>Status:</strong> 
+                <span class="{% if qualification_status == 'Passed' %}status-passed{% else %}status-failed{% endif %}">
+                    {{ qualification_status }}
+                </span>
+            </p>
+        </div>
+
+        <h3 class="text-2xl font-semibold text-gray-800 mb-4">All Responses</h3>
+        <ul class="space-y-4">
+            {% for r in responses %}
+            <li class="response-card bg-white p-4 rounded-lg">
+                <p class="text-gray-700"><strong class="text-indigo-600">Q:</strong> {{ r.question }}</p>
+                <p class="text-gray-700"><strong class="text-indigo-600">A:</strong> {{ r.answer }}</p>
+                <p class="text-gray-700"><strong class="text-indigo-600">Score:</strong> {{ r.score }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+      <center>  <a href="{% url 'user_homepage' %}" class="mt-6 inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg back-button transition-all duration-300">
+            Back to Home
+        </a></center>
+
+    </div>
+</body>
+</html>
