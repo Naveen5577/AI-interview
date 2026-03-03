@@ -17,30 +17,44 @@ def generate_question(messages, job_description):
     question_count = len([m for m in messages if 'content' in m]) // 2 + 1
     
     prompt = (
-        f"You are conducting a technical interview for the position: {job_description}\n\n"
-        f"This is question {question_count} of 5.\n"
-        f"Generate ONE specific technical or behavioral interview question that directly tests skills, knowledge, or experience required for a {job_description}.\n\n"
-        f"Requirements:\n"
-        f"- Question must be highly relevant to {job_description}\n"
-        f"- Focus on technical skills, tools, frameworks, or methodologies used in this role\n"
-        f"- Make it specific and practical, not generic\n"
-        f"- Keep it concise (1-2 sentences)\n"
-        f"- Do NOT include any explanation or context, just the question\n\n"
-        f"Example for 'Python Developer': 'Explain the difference between list and tuple in Python and when you would use each.'\n"
-        f"Example for 'Data Scientist': 'How would you handle missing data in a dataset before building a machine learning model?'\n\n"
-        f"Now generate a question for: {job_description}"
+        f"You are a technical interviewer. Generate question {question_count} of 5 for: {job_description}\n\n"
+        f"CRITICAL RULES:\n"
+        f"1. Ask a SPECIFIC technical question about {job_description}\n"
+        f"2. DO NOT ask about 'experience' or 'tell me about'\n"
+        f"3. Ask about concepts, syntax, commands, best practices, or problem-solving\n"
+        f"4. Make it testable and specific\n"
+        f"5. Output ONLY the question, no explanation\n\n"
+        f"GOOD Examples:\n"
+        f"- For SQL: 'What is the difference between INNER JOIN and LEFT JOIN? Provide an example.'\n"
+        f"- For SQL: 'How would you optimize a slow-running query with multiple joins?'\n"
+        f"- For Python: 'Explain list comprehension and write an example to filter even numbers.'\n"
+        f"- For Java: 'What is the difference between == and .equals() in Java?'\n\n"
+        f"BAD Examples (DO NOT USE):\n"
+        f"- 'Tell me about your experience with SQL'\n"
+        f"- 'Describe your background in...'\n\n"
+        f"Now generate a TECHNICAL question for: {job_description}"
     )
     
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel(
+            'gemini-1.5-flash-latest',
+            generation_config={'temperature': 0.7}
+        )
         response = model.generate_content(prompt)
         question = response.text.strip()
         # Remove any quotes or extra formatting
         question = question.strip('"').strip("'").strip()
-        return question if question else f"Describe your experience with {job_description}."
+        
+        # Validate question doesn't contain generic phrases
+        generic_phrases = ['experience', 'tell me about', 'describe your', 'background']
+        if any(phrase in question.lower() for phrase in generic_phrases):
+            # Fallback to specific technical question
+            return f"What are the key concepts and best practices you should know for {job_description}?"
+        
+        return question if question else f"Explain a complex problem you solved using {job_description}."
     except Exception as e:
         print(f"ERROR: Question generation failed - {str(e)}")
-        return f"Tell me about your experience as a {job_description}."
+        return f"What are the most important technical skills required for {job_description}?"
 
 def evaluate_answer(question, answer):
     prompt = (
